@@ -1,15 +1,3 @@
-````mermaid
-sequenceDiagram
-    participant EC2 as EC2 Instance (Python App)
-    participant STS as AWS STS
-    participant S3 as Amazon S3
-
-    Note over EC2: App needs to read an S3 bucket
-    EC2->>STS: 1. AssumeRole (via Instance Profile)
-    STS-->>EC2: 2. Returns Temporary Credentials (Valid for 1-12 hrs)
-    EC2->>S3: 3. boto3 uses Temporary Credentials for API call
-    S3-->>EC2: 4. S3 allows request & returns data
-
 ## 1. What Exactly is an IAM Role?
 
 Unlike an IAM User, a **Role** does not have long-term credentials (no password, no permanent Access Keys). Instead, an IAM Role provides **temporary security credentials** that are valid for a short duration (usually 1 to 12 hours).
@@ -59,7 +47,7 @@ response = table.put_item(
         'Name': 'Stephane'
     }
 )
-````
+```
 
 _Stephane's Summary:_ Write code as if credentials don't exist. Let the environment (IAM Roles) inject them for you.
 
