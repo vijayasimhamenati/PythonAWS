@@ -97,8 +97,3 @@ Interviewers rarely test you on PuTTY configurations, but they will test your fu
 
 **Q3: We want developers to be able to access the command line of our Amazon Linux 2 EC2 instances, but we strictly forbid downloading `.pem` keys to personal laptops due to security policies. How can they access the servers?**
 **Answer:** We should mandate the use of EC2 Instance Connect. It allows developers to securely access a browser-based terminal directly through the authenticated AWS Console, eliminating the need to download, store, or manage long-term private `.pem` keys on their local machines.
-
----
-
-[Modern EC2 SSH Connection Guide](https://www.youtube.com/watch?v=w-yVPzSbb0c)
-This visual guide walks through alternative, keyless methods for securely accessing EC2 instances without the need to expose inbound ports or manage `.pem` files manually.
