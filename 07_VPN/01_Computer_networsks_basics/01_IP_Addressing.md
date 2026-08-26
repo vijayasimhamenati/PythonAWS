@@ -70,7 +70,7 @@ Initially (e.g., ARPANET), they split the 32 bits straight into:
 
 This led to the creation of **Classful IP Addressing**.
 
----
+## ![CIDR](./assets/cidr.png)
 
 ## 4. Classful IP Addressing [[17:26](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DUXMIxCYZu8o%26t%3D1046)]
 
@@ -136,7 +136,7 @@ Reserved for experimental/military purposes. Not used for general host allocatio
 - **Prefix:** Starts with `1111`.
 - **First Octet Range:** **240 to 255**.
 
----
+## ![CIDR bit allocation](./assets/cidr_bit_allocation.png)
 
 ## 5. Important Formula: Usable Hosts vs Total IPs [[46:12](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DUXMIxCYZu8o%26t%3D2772)]
 
