@@ -157,8 +157,6 @@ Even if a network mathematically has $N$ addresses, you cannot assign all of the
 
 ---
 
-Here are detailed GitHub-flavored Markdown notes derived from the second video in the series, maintaining the exact analogies, examples, and formatting style requested.
-
 # 🌐 Computer Networks: Types of Casting (Unicast, Limited & Directed Broadcast)
 
 **Video Title:** CN | IP address Subnetting | Types of Casting: Unicast,
