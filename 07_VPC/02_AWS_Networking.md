@@ -11,6 +11,8 @@ A CIDR block has two components:
 - **Base IP:** The starting IP address of the range (e.g., `10.0.0.0` or `192.168.0.0`).
 - **Subnet Mask:** The slash number (e.g., `/16`, `/24`) that defines how many bits of the IP address are fixed, and how many are allowed to change.
 
+![CIDR sheet](./assets/CIDRsheet.png)
+
 ### How Subnet Masks Work
 
 An IPv4 address is made of 4 "octets" (e.g., `X.X.X.X`). The subnet mask dictates how many IPs are available in that range:
@@ -46,6 +48,8 @@ Every new AWS account comes with a **Default VPC** in every region. This exists 
 - **Size:** It uses the `172.31.0.0/16` CIDR block.
 - **Subnets:** It automatically provisions a `/20` subnet (4,096 IPs) in every single Availability Zone in that region.
 - **Connectivity:** It comes pre-configured with an Internet Gateway, meaning any EC2 instance launched inside it automatically receives a Public IP and can connect to the internet.
+
+![AWS VPC Architecture](./assets/AWS_VPC_Architecture.png)
 
 ---
 
