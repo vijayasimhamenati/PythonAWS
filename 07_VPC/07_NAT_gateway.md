@@ -199,3 +199,73 @@ To make this architecture truly highly available (ready for production), you wou
 1. Create a second NAT Gateway in `PublicSubnetB`.
 2. Create a separate Route Table for `PrivateSubnetB`.
 3. Configure `PrivateSubnetB`'s route table to point its `0.0.0.0/0` traffic to the new NAT Gateway in AZ-B.
+
+---
+
+# VPC Part 4: Regional NAT Gateways (RNAT)
+
+Historically, achieving a highly available outbound internet architecture in AWS required deploying a traditional "Zonal" NAT Gateway in a dedicated Public Subnet for every single Availability Zone (AZ) you operated in. This added architectural complexity, increased costs due to cross-AZ data transfer charges, and introduced the security risk of having public subnets in environments that only needed to be private.
+
+In late 2025, AWS introduced the **Amazon VPC Regional NAT Gateway (RNAT)**, fundamentally changing how outbound VPC internet access is architected.
+
+## 1. What is a Regional NAT Gateway?
+
+A Regional NAT Gateway (RNAT) is a single, highly available NAT service that operates at the **VPC level** rather than being bound to a specific subnet. It is a standalone VPC resource with its own route table.
+
+**Key Architectural Changes:**
+
+- **No Public Subnets Required:** RNAT eliminates the need to create public subnets strictly to host NAT Gateways. Security-conscious organizations can now build 100% private VPCs with egress-only internet connectivity, removing the risk of accidentally exposing sensitive workloads to unsolicited inbound internet traffic.
+- **Single Routing Entry:** Instead of maintaining separate route tables per AZ pointing to different NAT Gateways, you simply create one route (`0.0.0.0/0`) pointing to your single RNAT ID.
+- **Zero Cross-AZ Charges:** Traffic no longer jumps across Availability Zones for NAT processing, eliminating unnecessary cross-AZ data transfer costs.
+
+---
+
+## 2. Dynamic Auto-Expansion & Scaling
+
+RNAT brings intelligent automation to high availability and capacity management.
+
+### Automatic AZ Expansion
+
+If you deploy RNAT in **Automatic Mode**, it dynamically monitors your VPC. When it detects a new Elastic Network Interface (ENI) appearing in a previously unused AZ, RNAT automatically expands its presence into that AZ to support the new workloads.
+
+- _Note:_ This expansion process takes an average of 15 to 20 minutes (up to a maximum of 60 minutes). During this brief scale-up window, internet-bound traffic is temporarily routed cross-AZ to an existing RNAT node.
+
+### Built-In Port Exhaustion Protection
+
+Each IP address allocated to a NAT Gateway can support up to 55,000 concurrent connections to a unique destination.
+
+- **Zonal NAT Limits:** Traditional Zonal NAT Gateways require you to manually allocate and associate additional Elastic IPs (up to a limit of 8) if you approach port exhaustion.
+- **RNAT Limits:** Regional NAT Gateways automatically associate new Elastic IPs whenever additional ports are required, supporting up to **32 IP addresses per AZ** entirely hands-free.
+
+---
+
+## 3. Regional vs. Zonal NAT Gateways
+
+While RNAT simplifies most architectures, traditional Zonal NAT Gateways are still required for specific use cases (like Private NAT).
+
+| Feature                       | Regional NAT Gateway (RNAT)      | Zonal NAT Gateway                |
+| ----------------------------- | -------------------------------- | -------------------------------- |
+| **Scope**                     | VPC-level (Spans all AZs)        | Subnet-level (Single AZ)         |
+| **Public Subnet Requirement** | **No**                           | **Yes**                          |
+| **AZ Expansion**              | Automatic upon ENI detection     | Manual (Create new NAT + Routes) |
+| **IP Scaling**                | Auto-scales up to 32 EIPs per AZ | Manual scaling up to 8 EIPs      |
+| **Private NAT Connectivity**  | **Not Supported**                | Supported                        |
+
+---
+
+## Interview Preparation: Regional NAT Gateways
+
+### Summary
+
+If an interviewer asks how to simplify a highly available multi-AZ egress architecture, reduce cross-AZ data transfer costs, or eliminate the need for public subnets entirely, the answer is the **Regional NAT Gateway (RNAT)**.
+
+### Q&A Details
+
+**Q1: Our security compliance team requires that our new VPC contains absolutely zero public subnets. However, our backend EC2 instances still require outbound internet access to download software patches from third-party repositories. How can we achieve this?**
+**Answer:** You should deploy a **Regional NAT Gateway (RNAT)**. Unlike traditional Zonal NAT Gateways, an RNAT operates at the VPC level and does not require a public subnet to host it. You can associate it with your entire VPC, allowing your private workloads to access the internet while maintaining a strictly 100% private subnet architecture.
+
+**Q2: We use an Auto Scaling Group that occasionally spins up workloads in `us-east-1c` during peak traffic, but the AZ is completely empty 90% of the time. If we use a Regional NAT Gateway in Automatic Mode, what happens to the network architecture when the ASG suddenly scales into that new AZ?**
+**Answer:** The Regional NAT Gateway will detect the new Elastic Network Interfaces (ENIs) deployed in `us-east-1c` and will automatically expand its presence into that Availability Zone. Note that this automated expansion takes approximately 15 to 60 minutes; during that window, the internet-bound traffic from the new instances will be temporarily routed cross-AZ to one of the active RNAT AZs until the local scaling completes.
+
+**Q3: We are designing an architecture that requires Private NAT connectivity to route overlapping IP addresses to an on-premises data center without touching the public internet. Should we use the new Regional NAT Gateway for this?**
+**Answer:** No. As of its launch, the Regional NAT Gateway does not support Private NAT connectivity types. You must use a traditional **Zonal NAT Gateway** for private connectivity use cases.
