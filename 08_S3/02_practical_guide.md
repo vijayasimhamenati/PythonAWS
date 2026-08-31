@@ -136,4 +136,4 @@ print(presigned_url)
 1. **Client Initialization:** Connects to AWS using your local credentials and targets the `eu-west-1` region.
 2. **Bucket Creation:** Notice the `LocationConstraint` block. S3 has a quirk where creating a bucket in `us-east-1` requires a different API call than the rest of the world. The configuration block is required for `eu-west-1`.
 3. **Upload & Folders:** The `upload_file` method handles the transfer. By setting the key to `images/coffee.jpg`, S3 will automatically render an `images` folder in the AWS Console.
-4. **Pre-Signed URL:** Generates a temporary URL embedding your IAM credentials, allowing you to view the private file in your browser without changing the bucket's public access settings.
+4. **Pre-Signed URL:** Generates a temporary URL embedding your IAM credentials, allowing you to view the private file in your browser without changing the bucket's public access setting.
