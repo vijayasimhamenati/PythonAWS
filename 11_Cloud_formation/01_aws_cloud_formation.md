@@ -162,3 +162,90 @@ If you inspect the tags on your new EC2 instance in the console, you will notice
 AWS automatically injects these tags into every resource provisioned via CloudFormation. This allows you to easily track costs in AWS Billing by filtering for specific Stack Names, and ensures you know exactly which code deployment is responsible for which live server.
 
 > **Cleanup Step:** To destroy this server, **do not** terminate it from the EC2 console. Go back to the CloudFormation console, select the `EC2InstanceDemo` stack, and click **Delete**. CloudFormation will automatically find the EC2 instance it created and terminate it for you.
+
+---
+
+Here is the `boto3` implementation to automate the CloudFormation deployment we just did in the console.
+
+This script demonstrates how to pass your infrastructure as code (the YAML template) directly to the AWS API, use a **Waiter** to pause the script until AWS finishes building the server, and extract the Physical ID of the new instance.
+
+### Prerequisites
+
+Make sure you have `boto3` installed (`pip install boto3`) and your AWS credentials configured.
+
+### The Boto3 Script
+
+```python
+import boto3
+import botocore.exceptions
+
+# Define variables
+region = 'us-east-1'
+stack_name = 'EC2InstanceDemo-Boto3'
+
+# The exact YAML template from the hands-on lab
+yaml_template = """
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2023 AMI in us-east-1
+      InstanceType: t2.micro
+"""
+
+# 1. Initialize the CloudFormation client
+cfn_client = boto3.client('cloudformation', region_name=region)
+
+def deploy_stack():
+    try:
+        print(f"🚀 Deploying CloudFormation stack: '{stack_name}'...")
+
+        # 2. Call the Create Stack API
+        cfn_client.create_stack(
+            StackName=stack_name,
+            TemplateBody=yaml_template
+        )
+
+        # 3. Use a Boto3 Waiter to pause the script until deployment is finished
+        print("⏳ Waiting for AWS to provision resources (this takes a couple of minutes)...")
+        waiter = cfn_client.get_waiter('stack_create_complete')
+        waiter.wait(StackName=stack_name)
+
+        print("✅ Stack deployment complete!")
+
+        # 4. Fetch the Physical ID of the created EC2 instance
+        response = cfn_client.describe_stack_resources(StackName=stack_name)
+
+        for resource in response['StackResources']:
+            if resource['LogicalResourceId'] == 'MyInstance':
+                physical_id = resource['PhysicalResourceId']
+                print(f"💻 Successfully provisioned EC2 Instance. Physical ID: {physical_id}")
+
+    except botocore.exceptions.ClientError as e:
+        print(f"❌ Deployment failed: {e.response['Error']['Message']}")
+
+def destroy_stack():
+    """Helper function to clean up resources so you aren't charged."""
+    print(f"\n🗑️  Initiating deletion of stack: '{stack_name}'...")
+    cfn_client.delete_stack(StackName=stack_name)
+
+    print("⏳ Waiting for AWS to destroy the resources...")
+    waiter = cfn_client.get_waiter('stack_delete_complete')
+    waiter.wait(StackName=stack_name)
+    print("✅ Stack successfully deleted. No more charges!")
+
+if __name__ == "__main__":
+    # Deploy the infrastructure
+    deploy_stack()
+
+    # Uncomment the line below to automatically destroy the instance after it builds
+    # destroy_stack()
+
+```
+
+### Key Boto3 Concepts Used:
+
+1. **`create_stack()`**: This is the equivalent of clicking "Submit" in the console. You pass it the `StackName` and the `TemplateBody` (which expects a raw string of your YAML or JSON code).
+2. **Waiters (`get_waiter`)**: CloudFormation deployments are asynchronous. If you run `create_stack()`, AWS returns a success message immediately to acknowledge receipt, but the server is still building in the background. `waiter.wait()` forces your Python script to pause and poll AWS automatically until the stack reaches the `CREATE_COMPLETE` state.
+3. **`describe_stack_resources()`**: This allows your script to look inside the deployed stack and map the **Logical ID** (`MyInstance`) from your YAML file to the real-world **Physical ID** (the `i-0abcd...` identifier) of the EC2 instance AWS just created.
