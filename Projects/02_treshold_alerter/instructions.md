@@ -14,7 +14,7 @@ We need an automated pipeline to ingest and validate batch data files. The user 
 
 **Architecture Flow:**
 
-![Architecture Diagram](./assets/threshold_alerter_architecture.png)
+![Architecture Diagram](./assets/architecture.png)
 
 1. **Frontend:** Streamlit app accepts the CSV upload.
 2. **Ingestion:** Streamlit uses `boto3` to push the file to an S3 bucket.
